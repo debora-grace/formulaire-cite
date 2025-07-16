@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulaire QR Cité</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 30px;
+    }
+
+    h2 {
+      text-align: center;
+    }
+
+    form {
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #1e88e5;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1565c0;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    .error {
+      color: #d32f2f;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .success {
+      color: #388e3c;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .message {
+      text-align: center;
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .message.error {
+      background-color: #ffebee;
+      color: #d32f2f;
+    }
+
+    .message.success {
+      background-color: #e8f5e8;
+      color: #388e3c;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📮 Formulaire QR pour la Cité</h2>
+
+  <form id="qrForm">
+    <input type="text" id="nom" placeholder="Ton nom" required />
+    <input type="text" id="objet" placeholder="Objet ou message" required />
+    <input type="tel" id="phone" placeholder="Téléphone" required />
+    <input type="text" id="type" placeholder="Type (parent, ami…)" required />
+    <button type="submit" id="submitBtn">Envoyer</button>
+    <div id="messageDiv"></div>
+  </form>
+
+  <script>
+    document.getElementById("qrForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const submitBtn = document.getElementById("submitBtn");
+      const messageDiv = document.getElementById("messageDiv");
+      
+      // Désactiver le bouton pendant l'envoi
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Envoi en cours...";
+      messageDiv.innerHTML = "";
+
+      const nom = document.getElementById("nom").value.trim();
+      const objet = document.getElementById("objet").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const type = document.getElementById("type").value.trim();
+
+      // Validation des champs
+      if (!nom || !objet || !phone || !type) {
+        showMessage("Veuillez remplir tous les champs", "error");
+        resetButton();
+        return;
+      }
+
+      // Validation du numéro de téléphone (format basique)
+      const phoneRegex = /^[\d\s\-\+\(\)\.]+$/;
+      if (!phoneRegex.test(phone)) {
+        showMessage("Format de téléphone invalide", "error");
+        resetButton();
+        return;
+      }
+
+      const message = 💌 Nouveau message reçu :\n👤 Nom : ${nom}\n📝 Objet : ${objet}\n📞 Téléphone : ${phone}\n📌 Type : ${type};
+
+      const token = "8042292124:AAHjnRBqB_SAGU8RnD5EF33I68tRiF_E87U";
+      const chatId = "8177009171";
+
+      try {
+        const response = await fetch(https://api.telegram.org/bot${token}/sendMessage, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'HTML'
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.ok) {
+          showMessage("✅ Message envoyé avec succès !", "success");
+          document.getElementById("qrForm").reset();
+        } else {
+          throw new Error(result.description || "Erreur API Telegram");
+        }
+      } catch (err) {
+        console.error("Erreur:", err);
+        showMessage("❌ Erreur lors de l'envoi. Veuillez réessayer.", "error");
+      } finally {
+        resetButton();
+      }
+    });
+
+    function showMessage(text, type) {
+      const messageDiv = document.getElementById("messageDiv");
+      messageDiv.innerHTML = <div class="message ${type}">${text}</div>;
+    }
+
+    function resetButton() {
+      const submitBtn = document.getElementById("submitBtn");
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Envoyer";
+    }
+
+    // Validation en temps réel pour le téléphone
+    document.getElementById("phone").addEventListener("input", (e) => {
+      const phone = e.target.value;
+      const phoneRegex = /^[\d\s\-\+\(\)\.]+$/;
+      
+      if (phone && !phoneRegex.test(phone)) {
+        e.target.style.borderColor = "#d32f2f";
+      } else {
+        e.target.style.borderColor = "#ccc";
+      }
+    });
+  </script>
+
+</body>
+</html>
